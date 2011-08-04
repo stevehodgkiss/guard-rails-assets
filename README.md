@@ -27,7 +27,7 @@ $ guard init rails-assets
 
 ## Rails 3.1
 
-The Rails 3.1 is a mandatory requirement, but is not enforeced via dependencies for now.
+The Rails 3.1 is a mandatory requirement, but is not enforced via dependencies for now.
 The reason is that the assets can currently be compiled using following "runners":
 
 1. rake command (CLI);
@@ -42,7 +42,7 @@ The 2nd approach is good because it is much faster, but does not reload Rails en
 
 ## Guardfile and Options
 
-In addition to the standard configuration, this Guard has options to specify when exacly to precompile assets.
+In addition to the standard configuration, this Guard has options to specify when exactly to precompile assets.
 
 - `:start` - compile assets when the guard starts (enabled by default)
 - `:change` - compile assets when watched files change (enabled by default)
