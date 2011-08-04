@@ -54,6 +54,12 @@ Also you can set the `:runner` option:
 - `:cli` - compile assets using the rake task - the most correct method, but slow.
 - `:rails` - compile assets by loading rails environment (default) - fast, but does not pick up changes.
 
+If you're using sprockets standalone or with sinatra, you can override the rails
+runners sprockets environment and environment_path with your custom settings.
+
+- `:sprockets_environment` - a lambda that returns an instance of Sprockets::Environment. E.g. `lambda { App.sprockets }`
+- `:environment_path` - defaults to "config/environment.rb"
+- `:precompile` - an array of assets to precompile. Required if you're not using Rails. E.g. `["*"]`
 
 
 For example:
@@ -73,6 +79,12 @@ end
 # compile when something changes and when starting
 guard 'rails-assets', :run_on => [:start, :change] do
   watch(%r{^app/assets/.+$})
+end
+
+# Non-rails configuration
+guard 'rails-assets', :sprockets_environment => lambda { App.sprockets }, :environment_path => "app.rb", :precompile => ["*"] do
+  watch(%r{^app/assets/.+$})
+  watch('app.rb')
 end
 ```
 
