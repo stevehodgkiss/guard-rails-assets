@@ -2,17 +2,19 @@ require 'spec_helper'
 
 describe Guard::RailsAssets::RailsRunner do
 
-  subject { Guard::RailsAssets::RailsRunner.new({}) }
+  let(:sprockets) { mock }
+  subject { Guard::RailsAssets::RailsRunner.new({:sprockets_environment => lambda { sprockets }}) }
   
   describe ".compile_assets" do
     
-    let(:asset_pipeline) { Guard::RailsAssets::RailsRunner::AssetPipeline }
+    let(:asset_pipeline) { mock(Guard::RailsAssets::RailsRunner::AssetPipeline) }
     
     before do
       described_class.class_eval do
         def boot_rails
         end
       end
+      Guard::RailsAssets::RailsRunner::AssetPipeline.stub(:new => asset_pipeline)
     end
     
     context "successful compile" do

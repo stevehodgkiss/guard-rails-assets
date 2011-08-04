@@ -4,43 +4,57 @@ module Guard
   class RailsAssets::RailsRunner
 
     def initialize(options)
-      
+      @sprockets_environment = options[:sprockets_environment] || lambda { Rails.application.config.assets }
+      @environment_path = options[:environment_path] || "config/environment.rb"
+      @precompile = options[:precompile]
     end
 
     # Methods to run the asset pipeline
     # Taken from - https://github.com/rails/rails/blob/master/actionpack/lib/sprockets/assets.rake
-    module AssetPipeline
-      extend self
-      extend Rake::DSL
+    class AssetPipeline
+      include Rake::DSL
+      
+      def initialize(sprockets_environment, precompile)
+        @env = sprockets_environment
+        @precompile = precompile
+      end
       
       def clean
-        assets = Rails.application.config.assets
-        public_asset_path = Rails.public_path + assets.prefix
-        rm_rf public_asset_path, :secure => true
+        path = if defined?(Rails)
+          Rails.public_path + @env.prefix
+        else
+          @env.static_root
+        end
+        rm_rf path, :secure => true
       end
 
       def precompile
-        Sprockets::Helpers::RailsHelper
-
-        assets = Rails.application.config.assets.precompile
-        # Always perform caching so that asset_path appends the timestamps to file references.
-        Rails.application.config.action_controller.perform_caching = true
-        Rails.application.assets.precompile(*assets)
+        assets = @precompile
+        if defined?(Rails)
+          Sprockets::Helpers::RailsHelper
+          Rails.application.config.action_controller.perform_caching = true
+          assets ||= Rails.application.config.assets.precompile
+        end
+        @env.precompile(*assets)
       end
     end
 
     def boot_rails
       @rails_booted ||= begin
-        require "#{Dir.pwd}/config/environment.rb"
+        require "#{Dir.pwd}/#{@environment_path}"
         true
       end
+    end
+    
+    def asset_pipeline
+      @asset_pipeline ||= AssetPipeline.new(@sprockets_environment.call, @precompile)
     end
 
     def run_compiler
       begin
         @failed = false
-        AssetPipeline.clean
-        AssetPipeline.precompile
+        asset_pipeline.clean
+        asset_pipeline.precompile
       rescue => e
         puts "An error occurred compiling assets: #{e}"
         @failed = true
